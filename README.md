@@ -1,10 +1,8 @@
-# DeNovoMolStructurePred
-
 ## Chemically Constrained Multi-Hypothesis Inference for De Novo Molecular Structure Prediction from Tandem Mass Spectra
 
 Research code for predicting molecular formulas and de novo molecular structures from tandem mass spectra. Instead of committing to one predicted formula, the framework retains multiple chemically plausible hypotheses, generates structures in parallel formula-conditioned branches, and compares the resulting candidates in a shared ranking space.
 
-**Authors:** Jianbin Guo, Hongmin Du, Kangjun Liu, Sibo Wei, Wenpeng Lu, Peng Zhang, Lei Wang, Yin Luo, Lifeng Dong, and Hongjun Yang.
+**Authors:** Jianbin Guo, Hongmin Du, Sibo Wei (first author), Kangjun Liu (second author), Wenpeng Lu, Peng Zhang, Lei Wang, Yin Luo, Lifeng Dong, and Hongjun Yang.
 
 **Repository:** <https://github.com/DYJG-research/DeNovoMolStructurePred>
 
@@ -133,7 +131,7 @@ These checks validate repository organization, syntax, internal paths, and selec
 
 Please cite the manuscript:
 
-> Jianbin Guo, Hongmin Du, Kangjun Liu, Sibo Wei, Wenpeng Lu, Peng Zhang, Lei Wang, Yin Luo, Lifeng Dong, and Hongjun Yang. *Chemically Constrained Multi-Hypothesis Inference for De Novo Molecular Structure Prediction from Tandem Mass Spectra*.
+> Jianbin Guo, Hongmin Du, Sibo Wei, Kangjun Liu, Wenpeng Lu, Peng Zhang, Lei Wang, Yin Luo, Lifeng Dong, and Hongjun Yang. *Chemically Constrained Multi-Hypothesis Inference for De Novo Molecular Structure Prediction from Tandem Mass Spectra*.
 
 A publication DOI will be added when available.
 
