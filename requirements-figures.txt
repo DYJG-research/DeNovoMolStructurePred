@@ -1,0 +1,3 @@
+# Optional standalone plotting dependencies; no model/data downloads required.
+numpy
+matplotlib
