@@ -1,0 +1,186 @@
+"""Dependency-free checks for the source layout and portable file interfaces."""
+
+import ast
+import importlib.util
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class RepositoryLayoutTests(unittest.TestCase):
+    def test_all_python_sources_parse(self):
+        sources = list((ROOT / "pipeline").rglob("*.py"))
+        sources += list((ROOT / "figures" / "scripts").glob("*.py"))
+        sources += list((ROOT / "scripts").glob("*.py"))
+        for relative in (
+            "structure/multiformula_common.py",
+            "structure/generation/build_branch_shard_manifests.py",
+        ):
+            self.assertTrue((ROOT / "pipeline" / relative).is_file(), relative)
+        self.assertEqual(11, len(list((ROOT / "figures" / "scripts").glob("*.py"))))
+        for path in sources:
+            with self.subTest(path=path.relative_to(ROOT)):
+                ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+
+    def test_package_initializers(self):
+        for source in (ROOT / "pipeline").rglob("*.py"):
+            directory = source.parent
+            while directory != ROOT:
+                self.assertTrue((directory / "__init__.py").is_file(), str(directory))
+                directory = directory.parent
+
+    def test_shell_syntax(self):
+        scripts = list((ROOT / "scripts").rglob("*.sh"))
+        self.assertEqual(6, len(scripts))
+        for path in scripts:
+            result = subprocess.run(["bash", "-n", str(path)], capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_internal_package_imports_resolve(self):
+        for path in (ROOT / "pipeline").rglob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                modules = []
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    modules.append(node.module)
+                elif isinstance(node, ast.Import):
+                    modules.extend(alias.name for alias in node.names)
+                for module in modules:
+                    if not module.startswith("pipeline."):
+                        continue
+                    target = ROOT.joinpath(*module.split("."))
+                    self.assertTrue(target.with_suffix(".py").is_file() or (target / "__init__.py").is_file(), f"{path}: {module}")
+
+    def test_markdown_relative_links_exist(self):
+        docs = [ROOT / "README.md", ROOT / "DATA.md", ROOT / "figures" / "README.md"]
+        docs += list((ROOT / "docs").glob("*.md"))
+        docs += list((ROOT / "examples").rglob("*.md"))
+        for path in docs:
+            for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", path.read_text(encoding="utf-8")):
+                if target.startswith(("https://", "http://", "mailto:", "#")):
+                    continue
+                target = target.split("#", 1)[0]
+                self.assertTrue((path.parent / target).exists(), f"{path}: {target}")
+
+    def test_readme_module_names_resolve(self):
+        for path in [ROOT / "README.md", *list((ROOT / "docs").glob("*.md"))]:
+            for module in re.findall(r"python -m (pipeline\.[A-Za-z0-9_.]+)", path.read_text(encoding="utf-8")):
+                if module.endswith("."):
+                    continue
+                self.assertTrue(ROOT.joinpath(*module.split(".")).with_suffix(".py").is_file(), f"{path}: {module}")
+
+    def test_source_relative_formula_defaults(self):
+        for module in (
+            "pipeline.formula.candidates.evaluate_candidate_union",
+            "pipeline.formula.verification.build_listwise_sft",
+            "pipeline.formula.evaluation.evaluate_predictions",
+        ):
+            result = subprocess.run([sys.executable, "-m", module, "--help"], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_structure_preparation_help(self):
+        for module in (
+            "inputs.validate_multiformula_input", "inputs.check_ground_truth_leakage",
+            "inputs.build_formula_branches", "generation.build_sirius_input",
+            "generation.build_branch_shard_manifests",
+        ):
+            result = subprocess.run(
+                [sys.executable, "-m", f"pipeline.structure.{module}", "--help"],
+                cwd=ROOT, capture_output=True, text=True,
+            )
+            self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_release_omits_superseded_guides_and_renders(self):
+        self.assertFalse((ROOT / "docs" / "experiment1_file_manifest.txt").exists())
+        self.assertFalse((ROOT / "docs" / "experiment2_file_manifest.txt").exists())
+        self.assertFalse(any((ROOT / "figures" / "outputs").glob("*")))
+
+
+class AnonymityTests(unittest.TestCase):
+    def test_no_identifying_local_materials(self):
+        forbidden_names = {".git", ".claude", "__pycache__"}
+        forbidden_suffixes = (".pyc", ".pyo", ".pdf", ".pptx", ".tar.gz", ".zip")
+        for path in ROOT.rglob("*"):
+            self.assertNotIn(path.name, forbidden_names, str(path.relative_to(ROOT)))
+            if path.is_file():
+                self.assertFalse(path.name.endswith(forbidden_suffixes), str(path.relative_to(ROOT)))
+
+    def test_no_direct_identifiers_in_text(self):
+        patterns = (
+            r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
+            r"https?://orcid\.org/\d",
+            r"/(?:home|Users|u01)/[A-Za-z0-9_.-]+",
+        )
+        allowed_hosts = {"github.com", "www.modelscope.cn", "www.apache.org", "127.0.0.1"}
+        allowed_resource_paths = {
+            "github.com": {"/pluskal-lab/MassSpecGym"},
+            "www.modelscope.cn": {"/models/Qwen/Qwen3-14B"},
+        }
+        from urllib.parse import urlsplit
+
+        for path in ROOT.rglob("*"):
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8")
+            for pattern in patterns:
+                self.assertIsNone(re.search(pattern, text), f"Direct identifier in {path.relative_to(ROOT)}")
+            for url in re.findall(r'https?://[^\s<>`\")]+', text):
+                parsed = urlsplit(url.rstrip(".,;"))
+                self.assertIn(parsed.hostname, allowed_hosts, f"Unreviewed link in {path.relative_to(ROOT)}")
+                if parsed.hostname in allowed_resource_paths:
+                    self.assertIn(parsed.path, allowed_resource_paths[parsed.hostname], f"Unreviewed resource in {path.relative_to(ROOT)}")
+
+
+class FileInterfaceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        path = ROOT / "pipeline" / "structure" / "inputs" / "convert_formula_predictions.py"
+        spec = importlib.util.spec_from_file_location("formula_converter_for_tests", path)
+        cls.converter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.converter)
+
+    def test_converter_recovers_full_spectrum(self):
+        row = {"spectrum": {"peaks": [{"mz": "25", "intensity": 4}, {"mz": -1, "intensity": 2}, {"mz": 50, "intensity": 0}]}}
+        self.assertEqual([[25.0, 4.0], [50.0, 0.0]], self.converter.find_full_peaks(row))
+
+    def test_converter_accepts_parallel_arrays(self):
+        self.assertEqual([[10.0, 0.5]], self.converter.find_full_peaks({"spectrum": {"mzs": [10], "intensities": [0.5]}}))
+
+    def test_converter_rejects_duplicate_reference_ids(self):
+        with self.assertRaisesRegex(RuntimeError, "Duplicate"):
+            self.converter.build_dataset_index([{"identifier": "a"}, {"identifier": "a"}])
+
+    def test_converter_reads_json_and_jsonl(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "records.json"
+            records = [{"identifier": "a"}, {"identifier": "b"}]
+            path.write_text(json.dumps(records), encoding="utf-8")
+            self.assertEqual(records, self.converter.load_rows(path))
+            path.write_text("\n".join(map(json.dumps, records)), encoding="utf-8")
+            self.assertEqual(records, self.converter.load_rows(path))
+
+    def test_override_merge_preserves_records_and_decisions(self):
+        shortlist = [{"formula": "C2H6O", "best_adduct": "[M+H]+"}, {"formula": "CH2O2", "best_adduct": "[M+Na]+"}]
+        rows = [{"identifier": name, "shortlist": shortlist} for name in ("keep", "swap", "ungated")]
+        decisions = [{"identifier": "keep", "decision": "KEEP"}, {"identifier": "swap", "decision": "SWAP"}]
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            full, pred, output = [directory / name for name in ("full.jsonl", "decisions.jsonl", "output.jsonl")]
+            full.write_text("\n".join(map(json.dumps, rows)) + "\n", encoding="utf-8")
+            pred.write_text("\n".join(map(json.dumps, decisions)) + "\n", encoding="utf-8")
+            result = subprocess.run([sys.executable, "-m", "pipeline.formula.verification.merge_override_predictions", "--full", str(full), "--pred", str(pred), "--output", str(output)], cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stderr)
+            merged = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(["keep", "swap", "ungated"], [row["identifier"] for row in merged])
+            self.assertEqual(["C2H6O", "CH2O2", "C2H6O"], [row["final_formula"] for row in merged])
+            self.assertTrue(all(row["shortlist"] == shortlist for row in merged))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,28 @@
+{
+  "spectra": [
+    {"identifier":"synthetic-a","precursor_mz":47.0491,"polarity":"positive","peaks":[[18.01,0],[29.04,0.5],[31.02,1]]},
+    {"identifier":"synthetic-b","precursor_mz":45.0193,"polarity":"negative","peaks":[[17.00,0.1],[29.00,0.4]]},
+    {"identifier":"synthetic-c","precursor_mz":61.0284,"polarity":"positive","peaks":[[33.03,1],[43.02,0.2]]}
+  ],
+  "shortlists": [
+    {"identifier":"synthetic-a","z_margin":0.05,"shortlist":[{"formula":"CH2O2","best_adduct":"[M+H]+","ppm_error":7},{"formula":"C2H6O","best_adduct":"[M+H]+","ppm_error":-2}]},
+    {"identifier":"synthetic-b","z_margin":0.10,"shortlist":[{"formula":"CH2O2","best_adduct":"[M-H]-","ppm_error":1},{"formula":"C2H6O","best_adduct":"[M-H]-","ppm_error":10}]},
+    {"identifier":"synthetic-c","z_margin":0.25,"shortlist":[{"formula":"C2H4O2","best_adduct":"[M+H]+","ppm_error":1},{"formula":"C3H8O","best_adduct":"[M+H]+","ppm_error":3}]}
+  ],
+  "formula_truth": [
+    {"identifier":"synthetic-a","true_formula":"C2H6O","true_adduct":"[M+H]+"},
+    {"identifier":"synthetic-b","true_formula":"CH2O2","true_adduct":"[M-H]-"},
+    {"identifier":"synthetic-c","true_formula":"C2H4O2","true_adduct":"[M+H]+"}
+  ],
+  "formula_decisions": [
+    {"identifier":"synthetic-a","decision":"SWAP"},
+    {"identifier":"synthetic-b","decision":"KEEP"}
+  ],
+  "structure_scores": [
+    {"sample_id":"synthetic-a","candidate_id":"a1","smiles":"COC","oof_score":0.80,"label":0,"fold":1},
+    {"sample_id":"synthetic-a","candidate_id":"a2","smiles":"CCO","oof_score":0.75,"label":1,"fold":1},
+    {"sample_id":"synthetic-b","candidate_id":"b1","smiles":"OC=O","oof_score":0.90,"label":1,"fold":2},
+    {"sample_id":"synthetic-b","candidate_id":"b2","smiles":"OO","oof_score":0.55,"label":0,"fold":2}
+  ],
+  "pairwise_decisions": [{"sample_id":"synthetic-a","final_lowest_rank_confirmed":"a2"}]
+}

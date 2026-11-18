@@ -1,0 +1,5 @@
+{
+  "formula": {"samples": 3, "gated": 2, "swaps": 1, "top1_before": 2, "top1_after": 3},
+  "structure_preparation": {"spectra": 3, "branches": 6, "ms_files": 6, "shard_counts": {"shard_00000": 4, "shard_00001": 2}},
+  "pairwise_replay": {"samples": 3, "promotions": 1, "empty": 1, "label_top1_before": 1, "label_top1_after": 2, "label_top10_before": 2, "label_top10_after": 2}
+}

@@ -1,0 +1,15 @@
+# Runtime dependencies for candidate processing, ranking, inference clients,
+# and evaluation. This is not a complete environment lockfile.
+# The manuscript environment used Python 3.11.15 and RDKit 2026.03.4.
+# Install PyTorch for the intended CUDA runtime before GPU use.
+# External tools: SIRIUS/MSNovelist + Java; ms-swift + compatible vLLM.
+rdkit>=2024.0
+numpy
+xgboost
+pandas
+scikit-learn
+pulp==2.9.0
+myopic-mces==1.0.0
+requests
+tqdm
+torch

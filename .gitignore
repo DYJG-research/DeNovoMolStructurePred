@@ -1,0 +1,65 @@
+# Large research artifacts are stored outside Git. See DATA.md.
+/data/
+/datasets/
+/models/
+/work/
+/results/
+/runs/
+/checkpoints/
+/logs/
+
+# Model weights and binary matrices
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.h5
+*.bin
+*.npy
+*.npz
+*.parquet
+*.sqlite
+*.sirius
+
+# Bulk data exports; allow small source-controlled fixtures/configuration.
+*.jsonl
+*.jsonl.gz
+*.tsv
+*.csv
+!tests/fixtures/**
+!configs/**
+
+# Archives and local-only manuscript
+*.tar
+*.tar.gz
+*.zip
+*.7z
+/Nature_Communications.pdf
+
+# Generated plotting outputs (not the source directory)
+/figures/outputs/
+/figures/*.pdf
+/figures/*.png
+/figures/*.svg
+
+# Python and local tooling
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+.claude/
+*.log
+*.out
+*.tmp
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
