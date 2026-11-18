@@ -12,21 +12,32 @@ Use the path appropriate to what you want to verify. Run the commands from the r
 
 The synthetic demo was tested in fresh Python virtual environments without pip or third-party packages on Ubuntu 22.04.4 LTS, x86-64, Linux kernel 5.15.0-94-generic. With Python already installed, there is no package installation step. Five runs with each interpreter took 0.47–0.51 s with Python 3.10.12 (median 0.49 s) and 0.55–0.57 s with Python 3.13.13 (median 0.56 s). These are demo wall times on one host, not guarantees or training/inference times. The demo requires no CUDA, RDKit, or XGBoost. Windows and macOS were not tested.
 
-The manuscript reports Python **3.11.15**, RDKit **2026.03.4**, SIRIUS **6.3.7** with MSNovelist, and an experiment host with **eight NVIDIA A100-SXM4-80GB GPUs**. This is reported hardware, not a minimum requirement or evidence that every stage used eight GPUs. The exact original OS/distribution, driver, CUDA, PyTorch, XGBoost, Java, MSNovelist, ms-swift, vLLM, and solver versions are not established in this checkout. Original package installation times, stage wall times, and peak memory or compute hours are likewise not established.
+The recorded versions apply to the stages listed below; they are not a single tested environment for all stages.
+
+| Stage or component | Recorded version | Evidence |
+| :--- | :--- | :--- |
+| Python and RDKit | Python 3.11.15; RDKit 2026.03.4 | Manuscript implementation details |
+| Structure generation | SIRIUS 6.3.7 with MSNovelist | Manuscript implementation details |
+| Formula XGBoost pre-ranker | XGBoost 3.2.0 | Training summary and serialized model metadata |
+| LoRA adapters | PEFT 0.18.1 | Version recorded in the three adapter configurations |
+| MCES evaluation | PuLP 2.9.0; myopic-mces 1.0.0 | Evaluation dependency pins |
+| GPU training and serving | Python 3.11; CUDA Toolkit 12.8.1; PyTorch 2.9.0; vLLM 0.13.0 | Confirmed GPU environment |
+
+The manuscript reports an experiment host with eight NVIDIA A100-SXM4-80GB GPUs. Install the CUDA toolkit and NVIDIA driver separately, and use PyTorch and vLLM builds for the CUDA runtime listed above.
 
 For saved-prediction scoring, formula replay uses only Python. Structure 2D exact/ECFP4 scoring requires RDKit. MCES also needs `pulp==2.9.0`, `myopic-mces==1.0.0`, and an available PuLP solver. For example, on a compatible CPU host with Python 3.11, create a separate scoring environment:
 
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
-python -m pip install 'rdkit>=2024.0' 'pulp==2.9.0' 'myopic-mces==1.0.0'
+python -m pip install 'rdkit==2026.3.4' 'pulp==2.9.0' 'myopic-mces==1.0.0'
 ```
 
-This is a dependency specification, not an independently validated lockfile. For a benchmark comparison, use and report the exact RDKit build and solver; for the full workflow, see [requirements.txt](../requirements.txt) and the [installation instructions](../README.md#installation). Install the PyTorch build appropriate for the driver/CUDA combination, and verify compatibility with ms-swift/vLLM separately; do not infer it from the A100 model name.
+For a benchmark comparison, record the RDKit build and the selected PuLP solver. For the full workflow, see [requirements.txt](../requirements.txt) and the [installation instructions](../README.md#installation). For GPU stages, install the PyTorch build appropriate for the driver/CUDA combination and verify compatibility with ms-swift and vLLM.
 
 ## Recompute the headline tables from saved predictions
 
-The study artifacts below are **not bundled or anonymously downloadable from this checkout**; see [DATA.md](../DATA.md). These commands require matching predictions, references, and test IDs for the benchmark run. No GPU or model service is required for saved-prediction scoring.
+These commands require matching predictions, references, and test IDs for the benchmark run. See [DATA.md](../DATA.md) for file names and local paths. No GPU or model service is required for saved-prediction scoring.
 
 ### Inputs and coverage
 
@@ -70,7 +81,7 @@ Check `best.baseline` and `best.final` in the formula report. Accuracies and rat
 
 The structure report measures 2D connectivity via the first InChIKey block and ECFP4 Tanimoto (radius 2, 2,048 bits); it is not stereochemical validation. MCES reports `mces_at_1` and `mces_at_10` (lower is better). Check the recorded solver and pair errors when interpreting the averages. The [plotting utilities](../figures/README.md) render embedded numbers; they do not recompute metrics from these commands.
 
-The single **predicted** Top-1 formula propagation setting is a restricted comparison for the multi-hypothesis method. It uses the same downstream procedure with fewer formula hypotheses; it is not the separate reference-formula control. Report external baselines as quoted or rerun as appropriate and identify the corresponding split and configuration. This repository does not establish that every external baseline was rerun.
+The Top-1 predicted-formula setting passes one predicted formula to the same downstream procedure used in the multi-hypothesis setting. It is separate from the reference-formula control.
 
 ## Optional: prepare inputs for a few local study spectra
 
@@ -98,4 +109,4 @@ Compare the output `sample_id` list with `ids.txt` and inspect conversion statis
 
 ## Regenerate or retrain
 
-Follow the [formula](formula_pipeline.md) and [structure](structure_pipeline.md) stage guides with matching artifacts from [DATA.md](../DATA.md). Full formula test feature generation must retain all test IDs, including spectra for which the correct formula is missing from the candidate pool. Match the baseline or ten-predicted-formula setup, use the intended 0.1 structure verifier margin, and confirm the score/fold provenance expected by the pairwise stage. An OOF score file is not automatically a frozen ranker or a compatible fold handoff. Reconstruction of SIRIUS-input code and a passing demo do not validate SIRIUS/MSNovelist, model weights, the original environment, or the full training workflow.
+Follow the [formula](formula_pipeline.md) and [structure](structure_pipeline.md) stage guides with matching artifacts from [DATA.md](../DATA.md). Full formula test feature generation must retain all test IDs, including spectra for which the correct formula is missing from the candidate pool. Match the baseline or ten-predicted-formula setup, use the intended 0.1 structure verifier margin, and confirm the score/fold provenance expected by the pairwise stage. An OOF score file is not automatically a frozen ranker or a compatible fold handoff. The offline demo does not run SIRIUS/MSNovelist, load model weights, or exercise the full training workflow.

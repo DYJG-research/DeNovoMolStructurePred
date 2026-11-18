@@ -2,9 +2,9 @@
 
 Run Python modules from the repository root. Install the dependencies and prepare matching artifacts as described in [DATA.md](../DATA.md). Pass explicit paths and propagation depth: some utility defaults target smaller configurations.
 
-## Reconstructed preparation sources
+## Input preparation
 
-The [multi-formula helper](../pipeline/structure/multiformula_common.py) and [SIRIUS shard-manifest builder](../pipeline/structure/generation/build_branch_shard_manifests.py) were reconstructed from their callers and historical file formats. No original source or full benchmark rerun is claimed. Newly built branches use neutral Hill-order formulas; a historical run using another spelling can have different branch IDs. Sharding an existing manifest preserves its formulas, IDs, and shard assignments.
+New branches use neutral Hill-order formulas. Sharding an existing manifest preserves its formulas, branch IDs, and shard assignments.
 
 The leakage check reports known reference and truth fields in JSON records. It cannot determine the provenance of an unlabelled value. The prediction workflow must use predicted formulas; the reference-formula condition is a separate controlled experiment.
 

@@ -9,7 +9,7 @@ This repository contains source code. Store datasets, model weights, and generat
 | MassSpecGym benchmark | <https://github.com/pluskal-lab/MassSpecGym> | Upstream benchmark |
 | Qwen3-14B base model | <https://www.modelscope.cn/models/Qwen/Qwen3-14B> | External base model |
 | Fine-tuned adapters and formula XGBoost pre-ranker | Local model directories | Hosting links omitted for anonymous review; weights not bundled |
-| Study-specific dataset exports, candidate pools, SFT records, and predictions | Zenodo | Record links pending |
+| Study-specific dataset exports, candidate pools, SFT records, and predictions | Local data directories | See the [study artifact inventory](#study-artifact-inventory) |
 
 External model contents have not been independently downloaded or validated as part of this source reorganization. A base model is required in addition to the LoRA adapters.
 
@@ -30,7 +30,7 @@ Place the required model artifacts under `models/` or another local directory. P
 
 - **Bundled demo:** the [synthetic example](examples/smoke/README.md) contains three hand-authored spectra, inputs, and expected outputs. It is not drawn from MassSpecGym and needs no downloads.
 - **Upstream benchmark:** use the [MassSpecGym project](https://github.com/pluskal-lab/MassSpecGym) for its download and license instructions. Its upstream distributions are not substitutes for the exact study export or the study-specific predictions. The [optional subset instructions](docs/reproducibility.md#optional-prepare-inputs-for-a-few-local-study-spectra) operate on an already-local compatible study export and matching predictions.
-- **Study archive:** the prediction and reference artifacts required by the [headline scoring commands](docs/reproducibility.md#recompute-the-headline-tables-from-saved-predictions) are not bundled. Scoring requires the matching test-ID list, formula shortlist and gate decisions, ordered structure predictions, and test references.
+- **Study archive:** see the [headline scoring commands](docs/reproducibility.md#recompute-the-headline-tables-from-saved-predictions). Scoring requires the matching test-ID list, formula shortlist and gate decisions, ordered structure predictions, and test references.
 
 ## Choose the inputs for your task
 
@@ -61,11 +61,11 @@ In addition to inference inputs:
 - Listwise, override, and pairwise SFT datasets.
 - Any required exclusion-ID lists and fold metadata.
 
-Model weights alone are not sufficient to reconstruct all training inputs.
+Rebuilding the training inputs requires more than the model weights.
 
 ## Study artifact inventory
 
-The following names are referenced by the code or run guides. Their Zenodo download links have not yet been provided; they are **not bundled with this repository**.
+The following study artifacts are referenced by the code and run guides.
 
 | Artifact | Purpose |
 | :--- | :--- |

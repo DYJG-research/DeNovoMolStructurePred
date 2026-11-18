@@ -1,4 +1,4 @@
-"""Reconstruct per-shard SIRIUS manifests from existing branch assignments."""
+"""Split a multi-formula branch manifest into SIRIUS shard manifests."""
 
 import argparse
 import json
@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from pipeline.structure.multiformula_common import read_jsonl
 
+DEFAULT_SHARD_SIZE = 500
 _SHARD_FILE = re.compile(r"shard_(?:[0-9]{5}|[1-9][0-9]{5,})\.jsonl")
 
 
@@ -23,7 +24,10 @@ def _check_destination(path):
         raise ValueError(f"not a regular output file: {path}")
 
 
-def build_manifests(branches, output_dir, stats, *, clean=False):
+def build_manifests(branches, output_dir, stats, *, clean=False, shard_size=DEFAULT_SHARD_SIZE):
+    """Group rows by existing IDs, assigning a shard by position only when absent."""
+    if type(shard_size) is not int or shard_size <= 0:
+        raise ValueError("shard_size must be a positive integer")
     branches, output_dir, stats = map(Path, (branches, output_dir, stats))
     if _same_path(branches, stats):
         raise ValueError("stats path must not be the input manifest")
@@ -48,11 +52,13 @@ def build_manifests(branches, output_dir, stats, *, clean=False):
                 raise ValueError(f"{branches}:{number}: duplicate branch_id {branch_id!r}")
             seen_ids.add(branch_id)
             shard = row.get("shard_id")
+            if shard is None:
+                shard = (len(seen_ids) - 1) // shard_size
             if type(shard) is not int or shard < 0:
                 raise ValueError(f"{branches}:{number}: shard_id must be a nonnegative integer")
             tag = f"shard_{shard:05d}"
             try:
-                encoded = json.dumps(row, ensure_ascii=False, allow_nan=False)
+                encoded = json.dumps(row, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
             except ValueError as exc:
                 raise ValueError(f"{branches}:{number}: {exc}") from exc
             with (stage / f"{tag}.jsonl").open("a", encoding="utf-8", newline="\n") as stream:
@@ -105,10 +111,13 @@ def main():
     parser.add_argument("--branches", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--stats", required=True)
+    parser.add_argument("--shard-size", type=int, default=DEFAULT_SHARD_SIZE,
+                        help="Rows per shard when shard_id is absent (default: %(default)s)")
     parser.add_argument("--clean", action="store_true", help="Remove stale files with generated shard names")
     args = parser.parse_args()
     try:
-        report = build_manifests(args.branches, args.output_dir, args.stats, clean=args.clean)
+        report = build_manifests(args.branches, args.output_dir, args.stats,
+                                 clean=args.clean, shard_size=args.shard_size)
     except (OSError, ValueError) as exc:
         parser.exit(1, f"[ERROR] {exc}\n")
     print(json.dumps(report, ensure_ascii=False, indent=2))

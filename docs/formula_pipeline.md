@@ -1,6 +1,6 @@
 # Molecular-formula pipeline
 
-Run commands from the repository root. Python entry points use `python -m`; use each module's `--help` after installing its dependencies. All paths in examples are explicit local paths, not bundled assets. See [DATA.md](../DATA.md).
+Run commands from the repository root. Python entry points use `python -m`; use each module's `--help` after installing its dependencies. Adjust the example paths to match your local files. See [DATA.md](../DATA.md).
 
 ## Stage order and interfaces
 

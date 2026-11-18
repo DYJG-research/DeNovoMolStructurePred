@@ -3,7 +3,8 @@
 /datasets/
 /models/
 /work/
-/results/
+/results/*
+!/results/Source_Data.xlsx
 /runs/
 /checkpoints/
 /logs/

@@ -29,6 +29,8 @@ The main configuration propagates **10 predicted formulas**. Reference-formula e
 
 ## Results reported in the manuscript
 
+[Source Data workbook](results/Source_Data.xlsx): main paper results for Figs. 2 and 3.
+
 Evaluation uses the predefined **MassSpecGym test partition: 17,556 spectra**. The values below are manuscript-reported results, not results recomputed during repository preparation.
 
 ### Molecular-formula prediction
@@ -93,25 +95,25 @@ python -m pip install -r requirements.txt
 python -m pip install -r requirements-figures.txt
 ```
 
-The requirements specify Python dependencies, **not a fully locked environment**. Install a PyTorch build appropriate for your CUDA environment before GPU training or serving.
+[requirements.txt](requirements.txt) lists the Python dependencies for the research pipeline. See [Environment and timing](docs/reproducibility.md#environment-and-timing) for the tested demo environment, recorded experiment versions, and GPU setup requirements. The offline demo does not use these dependencies.
 
 Additional tools:
 
 | Tool | Purpose |
 | :--- | :--- |
-| SIRIUS 6.3.7 with MSNovelist and compatible Java | Formula-conditioned structure generation |
+| SIRIUS 6.3.7 with MSNovelist | Formula-conditioned structure generation |
 | ms-swift and a compatible vLLM/PyTorch/CUDA stack | Qwen3-14B LoRA training and serving |
 | A supported PuLP solver | MCES evaluation |
 | ModelScope SDK, optional | Downloading pretrained weights |
 
 ## Data and pretrained models
 
-See **[DATA.md](DATA.md)** for artifact roles, model paths, and local storage conventions. Large data files and weights are not included in Git.
+See **[DATA.md](DATA.md)** for artifact roles, model paths, and local storage conventions.
 
 - **Benchmark:** [MassSpecGym](https://github.com/pluskal-lab/MassSpecGym).
 - **Adapters and formula pre-ranker:** place the required artifacts in local directories as described in [DATA.md](DATA.md). Hosting links are omitted for anonymous review; weights are not included.
 - **Base language model:** [Qwen/Qwen3-14B](https://www.modelscope.cn/models/Qwen/Qwen3-14B).
-- **Study-specific datasets and intermediate predictions:** Zenodo record links are pending. Do not assume they are available from this checkout.
+- **Study-specific datasets and intermediate predictions:** see the [artifact inventory](DATA.md#study-artifact-inventory).
 
 ## Running the pipeline
 
@@ -126,8 +128,6 @@ Three tasks require different inputs:
 - **Evaluate existing predictions:** use matching reference records and prediction files; no language-model weights are needed.
 - **Run pretrained inference:** additionally obtain candidate inputs, XGBoost artifacts, the base model, and the corresponding adapters.
 - **Rebuild training and intermediates:** additionally obtain training/validation records, candidate features, SFT datasets, and external generation tools.
-
-**Reconstructed structure sources:** this checkout includes replacements for the shared multi-formula helper and the SIRIUS shard-manifest builder. They were reconstructed from the existing callers and historical file formats, not recovered from the original experiment. See the [structure guide](docs/structure_pipeline.md) for the preparation commands and compatibility limits. The external artifacts and tools are still required for a benchmark rerun.
 
 ## Basic validation
 

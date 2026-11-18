@@ -1,15 +1,19 @@
 # Runtime dependencies for candidate processing, ranking, inference clients,
-# and evaluation. This is not a complete environment lockfile.
-# The manuscript environment used Python 3.11.15 and RDKit 2026.03.4.
-# Install PyTorch for the intended CUDA runtime before GPU use.
-# External tools: SIRIUS/MSNovelist + Java; ms-swift + compatible vLLM.
-rdkit>=2024.0
+# and evaluation. The offline demo uses only the Python standard library.
+# See docs/reproducibility.md for stage-specific versions and GPU setup.
+# Research environment: Python 3.11; CUDA Toolkit 12.8.1 for GPU stages.
+# RDKit 2026.03.4 is published as 2026.3.4 on PyPI.
+# Python, the CUDA toolkit, the GPU driver, and SIRIUS/MSNovelist
+# are installed separately from these Python packages.
+rdkit==2026.3.4
 numpy
-xgboost
+xgboost==3.2.0
 pandas
 scikit-learn
 pulp==2.9.0
 myopic-mces==1.0.0
 requests
 tqdm
-torch
+torch==2.9.0
+vllm==0.13.0
+ms-swift
